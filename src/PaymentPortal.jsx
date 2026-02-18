@@ -7,6 +7,9 @@ const PaymentPortal = () => {
   const [loginPassword, setLoginPassword] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
+  const [showRegistrationSuccess, setShowRegistrationSuccess] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState('');
+  
   const [registerData, setRegisterData] = useState({
     name: '',
     email: '',
@@ -149,9 +152,15 @@ const PaymentPortal = () => {
       return;
     }
     
-    // Check if email already exists
+    // Check if email already exists in approved users
     if (users.some(u => u.email === registerData.email)) {
       showToast('Email already registered', 'error');
+      return;
+    }
+    
+    // Check if email already exists in pending approvals
+    if (pendingApprovals.some(u => u.email === registerData.email)) {
+      showToast('An account with this email is already pending approval', 'error');
       return;
     }
     
@@ -176,6 +185,8 @@ const PaymentPortal = () => {
     };
     
     setPendingApprovals([...pendingApprovals, newUser]);
+    setRegisteredEmail(registerData.email);
+    setShowRegistrationSuccess(true);
     setShowRegister(false);
     setRegisterData({
       name: '',
@@ -185,8 +196,6 @@ const PaymentPortal = () => {
       phone: '',
       location: ''
     });
-    
-    showToast('Registration submitted! An admin will review and approve your account.', 'success');
   };
 
   const handleLogin = (e) => {
@@ -527,7 +536,51 @@ const PaymentPortal = () => {
             <h2 style={{ color: colors.secondary, fontSize: '20px', fontWeight: '600' }}>Payment Portal</h2>
           </div>
           
-          {!showRegister ? (
+          {showRegistrationSuccess ? (
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ 
+                background: '#d4edda', 
+                color: '#155724', 
+                padding: '30px 20px', 
+                borderRadius: '8px', 
+                marginBottom: '25px',
+                border: '2px solid #c3e6cb'
+              }}>
+                <div style={{ fontSize: '48px', marginBottom: '15px' }}>✅</div>
+                <h3 style={{ fontSize: '22px', fontWeight: 'bold', marginBottom: '15px' }}>Registration Submitted!</h3>
+                <p style={{ fontSize: '16px', marginBottom: '10px' }}>
+                  Thank you for registering, <strong>{registeredEmail}</strong>!
+                </p>
+                <p style={{ fontSize: '16px', marginBottom: '20px', background: '#f8f9fa', padding: '15px', borderRadius: '6px' }}>
+                  ⏳ <strong>Your account is pending approval</strong> from an administrator.
+                </p>
+                <p style={{ fontSize: '15px', color: '#155724', marginBottom: '25px' }}>
+                  You will receive access to the portal once your account is approved. 
+                  You'll be able to log in using the email and password you provided.
+                </p>
+              </div>
+              
+              <button
+                onClick={() => {
+                  setShowRegistrationSuccess(false);
+                  setShowRegister(false);
+                }}
+                style={{ 
+                  width: '100%', 
+                  padding: '14px', 
+                  background: colors.accent, 
+                  color: colors.white, 
+                  border: 'none', 
+                  borderRadius: '6px', 
+                  fontSize: '16px', 
+                  fontWeight: 'bold', 
+                  cursor: 'pointer' 
+                }}
+              >
+                Return to Login
+              </button>
+            </div>
+          ) : !showRegister ? (
             <>
               <form onSubmit={handleLogin}>
                 <div style={{ marginBottom: '20px' }}>
@@ -569,6 +622,10 @@ const PaymentPortal = () => {
                 >
                   Don't have an account? Register here
                 </button>
+              </div>
+
+              <div style={{ marginTop: '20px', padding: '12px', background: '#f0f9ff', borderRadius: '6px', border: `1px solid ${colors.secondary}`, fontSize: '12px', color: colors.primary }}>
+                <strong>Demo Access:</strong> Use admin@portal.com / admin123
               </div>
             </>
           ) : (
@@ -647,6 +704,18 @@ const PaymentPortal = () => {
                     required
                   />
                 </div>
+
+                <div style={{ 
+                  background: '#f0f9ff', 
+                  padding: '15px', 
+                  borderRadius: '6px', 
+                  marginBottom: '20px',
+                  border: `1px solid ${colors.secondary}`,
+                  fontSize: '14px',
+                  color: colors.primary
+                }}>
+                  <strong>Note:</strong> After registration, your account must be approved by an administrator before you can log in. You'll receive access once approved.
+                </div>
                 
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <button
@@ -657,7 +726,17 @@ const PaymentPortal = () => {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setShowRegister(false)}
+                    onClick={() => {
+                      setShowRegister(false);
+                      setRegisterData({
+                        name: '',
+                        email: '',
+                        password: '',
+                        confirmPassword: '',
+                        phone: '',
+                        location: ''
+                      });
+                    }}
                     style={{ flex: 1, padding: '14px', background: '#6b7280', color: colors.white, border: 'none', borderRadius: '6px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}
                   >
                     Back to Login
@@ -666,10 +745,6 @@ const PaymentPortal = () => {
               </form>
             </>
           )}
-          
-          <div style={{ marginTop: '20px', padding: '12px', background: '#f0f9ff', borderRadius: '6px', border: `1px solid ${colors.secondary}`, fontSize: '12px', color: colors.primary }}>
-            <strong>Demo Access:</strong> Use admin@portal.com / admin123
-          </div>
         </div>
       </div>
     );
